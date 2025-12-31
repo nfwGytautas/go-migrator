@@ -83,3 +83,7 @@ func (d *postgresDriver) ApplyMigration(ctx context.Context, migration gomigrato
 
 	return nil
 }
+
+func (d *postgresDriver) Close(ctx context.Context) error {
+	return d.db.Close(ctx)
+}
