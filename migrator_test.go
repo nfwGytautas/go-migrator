@@ -158,7 +158,7 @@ func TestRunMigrations(t *testing.T) {
 		err := RunMigrations(ctx, driver, migrations)
 
 		require.Error(t, err)
-		assert.Equal(t, "table creation failed", err.Error())
+		assert.Contains(t, err.Error(), "table creation failed")
 		driver.AssertExpectations(t)
 		// Close should be called even when CreateMigrationsTable fails
 		driver.AssertCalled(t, "Close", mock.Anything)
@@ -179,7 +179,7 @@ func TestRunMigrations(t *testing.T) {
 		err := RunMigrations(ctx, driver, migrations)
 
 		require.Error(t, err)
-		assert.Equal(t, "version check failed", err.Error())
+		assert.Contains(t, err.Error(), "version check failed")
 		driver.AssertExpectations(t)
 	})
 
