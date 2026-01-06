@@ -2,6 +2,7 @@ package gomigrator
 
 import (
 	"context"
+	"fmt"
 	"sort"
 )
 
@@ -37,12 +38,12 @@ func RunMigrations(ctx context.Context, driver MigrationDriver, migrations []Mig
 	defer driver.Close(ctx)
 
 	if err := driver.CreateMigrationsTable(ctx); err != nil {
-		return err
+		return fmt.Errorf("failed to create migrations table: %w", err)
 	}
 
 	currentVersion, err := driver.GetCurrentVersion(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get current version: %w", err)
 	}
 
 	// Sequentially apply the migrations

@@ -27,21 +27,22 @@ func (d *postgresDriver) Connect(ctx context.Context) (err error) {
 
 func (d *postgresDriver) CreateMigrationsTable(ctx context.Context) (err error) {
 	const tableSchema = `
-	CREATE TABLE IF NOT EXISTS {{.Table}} (
+	CREATE TABLE IF NOT EXISTS ` + migrationsTable + ` (
 		id 			INT PRIMARY KEY,
 		name 		VARCHAR(255) NOT NULL,
-		applied_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		applied_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 	)
 	`
-	_, err = d.db.Exec(ctx, tableSchema, migrationsTable)
+
+	_, err = d.db.Exec(ctx, tableSchema)
 	return
 }
 
 func (d *postgresDriver) GetCurrentVersion(ctx context.Context) (version int, err error) {
 	const query = `
-	SELECT MAX(id) FROM {{.Table}}
-	`
-	err = d.db.QueryRow(ctx, query, migrationsTable).Scan(&version)
+	SELECT COALESCE(MAX(id), 0) FROM ` + migrationsTable
+
+	err = d.db.QueryRow(ctx, query).Scan(&version)
 	if err == pgx.ErrNoRows {
 		return 0, nil
 	}
@@ -50,7 +51,7 @@ func (d *postgresDriver) GetCurrentVersion(ctx context.Context) (version int, er
 
 func (d *postgresDriver) ApplyMigration(ctx context.Context, migration gomigrator.Migration) error {
 	const query = `
-	INSERT INTO {{.Table}} (id, name, applied_at) VALUES ($1, $2, $3)
+	INSERT INTO ` + migrationsTable + ` (id, name, applied_at) VALUES ($1, $2, $3)
 	`
 
 	// Start a transaction
