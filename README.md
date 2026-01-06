@@ -6,10 +6,29 @@ It is my personal belief that having a flow of only "UP" shields from a large po
 
 ## Usage
 
-### As a `Docker` worker image
+### As a `Docker` image
 
 ```bash
 docker pull ghcr.io/apphene/go-migrator:latest
+```
+
+#### Docker bundled image
+
+```dockerfile
+FROM ghcr.io/apphene/go-migrator:latest
+
+COPY ./migrations /migrations
+
+ENV MIGRATIONS_DIR=/migrations
+ENV DRIVER=postgres
+```
+
+Build and run:
+```bash
+docker build -t myapp-migrations .
+docker run --rm \
+  -e DATABASE_DSN="postgres://user:password@host:5432/dbname?sslmode=disable" \
+  myapp-migrations
 ```
 
 #### Docker Compose Example

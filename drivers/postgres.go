@@ -30,7 +30,7 @@ func (d *postgresDriver) CreateMigrationsTable(ctx context.Context) (err error) 
 	CREATE TABLE IF NOT EXISTS ` + migrationsTable + ` (
 		id 			INT PRIMARY KEY,
 		name 		VARCHAR(255) NOT NULL,
-		applied_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		applied_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 	)
 	`
 
@@ -40,9 +40,9 @@ func (d *postgresDriver) CreateMigrationsTable(ctx context.Context) (err error) 
 
 func (d *postgresDriver) GetCurrentVersion(ctx context.Context) (version int, err error) {
 	const query = `
-	SELECT MAX(id) FROM ` + migrationsTable
+	SELECT COALESCE(MAX(id), 0) FROM ` + migrationsTable
 
-	err = d.db.QueryRow(ctx, query, migrationsTable).Scan(&version)
+	err = d.db.QueryRow(ctx, query).Scan(&version)
 	if err == pgx.ErrNoRows {
 		return 0, nil
 	}
