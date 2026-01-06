@@ -3,6 +3,7 @@ module github.com/nfwGytautas/go-migrator
 go 1.24.9
 
 require (
+	github.com/caarlos0/env/v9 v9.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
