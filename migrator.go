@@ -3,6 +3,7 @@ package gomigrator
 import (
 	"context"
 	"fmt"
+	"log"
 	"sort"
 )
 
@@ -46,11 +47,16 @@ func RunMigrations(ctx context.Context, driver MigrationDriver, migrations []Mig
 		return fmt.Errorf("failed to get current version: %w", err)
 	}
 
+	log.Println("Current version: ", currentVersion)
+	log.Println("Latest  version: ", len(migrations))
+
 	// Sequentially apply the migrations
 	for i := currentVersion; i < len(migrations); i++ {
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
+
+		log.Printf("Applying migration: '%s' (version: %d)\n", migrations[i].Name, migrations[i].Version)
 
 		// Apply the migration at index `i`
 		// This is valid because we sorted the migrations

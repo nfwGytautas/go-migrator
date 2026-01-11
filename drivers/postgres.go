@@ -68,13 +68,16 @@ func (d *postgresDriver) ApplyMigration(ctx context.Context, migration gomigrato
 	}
 
 	// Log the migration
-	_, err = d.db.Exec(
+	_, err = tx.Exec(
 		ctx,
 		query,
 		migration.Version,
 		migration.Name,
-		time.Now().Unix(),
+		time.Now(),
 	)
+	if err != nil {
+		return fmt.Errorf("failed to log migration: %w", err)
+	}
 
 	// Commit the transaction
 	err = tx.Commit(ctx)
