@@ -62,7 +62,7 @@ func (d *postgresDriver) ApplyMigration(ctx context.Context, migration gomigrato
 	defer tx.Rollback(ctx)
 
 	// Apply the migration
-	_, err = tx.Exec(ctx, migration.SQL)
+	_, err = tx.Exec(ctx, migration.MigrationSQL)
 	if err != nil {
 		return fmt.Errorf("failed to apply migration (%s): %w", migration.Name, err)
 	}
@@ -77,6 +77,14 @@ func (d *postgresDriver) ApplyMigration(ctx context.Context, migration gomigrato
 	)
 	if err != nil {
 		return fmt.Errorf("failed to log migration: %w", err)
+	}
+
+	// Apply the fixture
+	if migration.FixturesSQL != "" {
+		_, err = tx.Exec(ctx, migration.FixturesSQL)
+		if err != nil {
+			return fmt.Errorf("failed to apply fixture: %w", err)
+		}
 	}
 
 	// Commit the transaction

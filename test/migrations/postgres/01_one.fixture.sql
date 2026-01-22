@@ -1,0 +1,10 @@
+INSERT INTO one (id) VALUES (1);
+INSERT INTO one (id) VALUES (2);
+INSERT INTO one (id) VALUES (3);
+INSERT INTO one (id) VALUES (4);
+INSERT INTO one (id) VALUES (5);
+INSERT INTO one (id) VALUES (6);
+INSERT INTO one (id) VALUES (7);
+INSERT INTO one (id) VALUES (8);
+INSERT INTO one (id) VALUES (9);
+INSERT INTO one (id) VALUES (10);

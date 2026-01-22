@@ -1,0 +1,18 @@
+# Number of retries to attempt if the migrations fail
+max-retries: 3
+
+# Delay between retries
+retry-delay: 1s
+
+# Timeout for a migration job (how much time to wait for a single migration job to complete)
+timeout: 10s
+
+# Are fixtures enabled?
+fixtures: ${FIXTURES_ENABLED}
+
+# Migrations to run
+migrations:
+  - name: test-postgres
+    source: /migrations/postgres
+    postgres:
+      dsn: ${POSTGRES_DRIVER_DSN}
