@@ -1,0 +1,3 @@
+CREATE TABLE one (
+    id INT PRIMARY KEY
+);

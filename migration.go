@@ -11,20 +11,21 @@ import (
 
 // Migration is the struct that represents a migration
 type Migration struct {
-	Version int    // the version of the migration
-	Name    string // the name of the migration
-	SQL     string // the sql of the migration
+	Version      int    // the version of the migration
+	Name         string // the name of the migration
+	MigrationSQL string // the sql of the migration
+	FixturesSQL  string // the sql of the fixtures
 }
 
 // LoadMigrationsFromDir loads the migrations from a filesystem directory, it doesn't recurse into subdirectories
-func LoadMigrationsFromDir(path string) ([]Migration, error) {
+func LoadMigrationsFromDir(path string, fixtures bool) ([]Migration, error) {
 	dirFS := os.DirFS(path)
-	return LoadMigrationsFromFS(dirFS)
+	return LoadMigrationsFromFS(dirFS, fixtures)
 }
 
 // LoadMigrationsFromFS loads the migrations from an embedded filesystem
 //   - DOES NOT recurse into subdirectories
-func LoadMigrationsFromFS(afs fs.FS) ([]Migration, error) {
+func LoadMigrationsFromFS(afs fs.FS, fixtures bool) ([]Migration, error) {
 	files, err := fs.ReadDir(afs, ".")
 	if err != nil {
 		return nil, fmt.Errorf("failed to read migrations from embedded filesystem: %w", err)
@@ -41,46 +42,71 @@ func LoadMigrationsFromFS(afs fs.FS) ([]Migration, error) {
 			continue
 		}
 
-		content, err := fs.ReadFile(afs, file.Name())
-		if err != nil {
-			return nil, fmt.Errorf("failed to read migration file (%s): %w", file.Name(), err)
-		}
-
-		version, name, err := parseMigrationFileName(file.Name())
+		m, err := parseMigrationFile(afs, file, fixtures)
 		if err != nil {
 			return nil, err
 		}
 
-		migrations = append(migrations, Migration{
-			Version: version,
-			Name:    name,
-			SQL:     string(content),
-		})
+		if m != nil {
+			migrations = append(migrations, *m)
+		}
 	}
 
 	return migrations, nil
 }
 
-func parseMigrationFileName(fileName string) (version int, name string, err error) {
+func parseMigrationFile(afs fs.FS, file fs.DirEntry, fixtures bool) (m *Migration, err error) {
 	// File name format: <id>_<name>.sql
+	fileName := file.Name()
+
+	// Ignore non sql files
+	if !strings.HasSuffix(fileName, ".sql") {
+		return
+	}
+
+	// Ignore fixture files
+	if strings.HasSuffix(fileName, ".fixture.sql") {
+		return
+	}
+
+	fileName = strings.TrimSuffix(fileName, ".sql")
+
+	m = &Migration{}
 
 	// Find the first underscore to separate the ID from the name
 	underscoreIndex := strings.Index(fileName, "_")
 	if underscoreIndex == -1 {
-		return 0, "", fmt.Errorf("invalid migration file name format for file: %s, (the format is <id>_<name>.sql)", fileName)
+		return m, fmt.Errorf("invalid migration file name format for file: %s, (the format is <id>_<name>.sql)", fileName)
 	}
 
 	versionStr := fileName[:underscoreIndex]
-	name = fileName[underscoreIndex+1:]
+	m.Name = fileName[underscoreIndex+1:]
 
-	version, err = strconv.Atoi(versionStr)
+	m.Version, err = strconv.Atoi(versionStr)
 	if err != nil {
-		return 0, "", fmt.Errorf("failed to parse migration file version (%s): %w", fileName, err)
+		return m, fmt.Errorf("failed to parse migration file version (%s): %w", fileName, err)
 	}
 
-	if version <= 0 {
-		return 0, "", fmt.Errorf("migration file version cannot be <= 0: %s", fileName)
+	if m.Version <= 0 {
+		return m, fmt.Errorf("migration file version cannot be <= 0: %s", fileName)
 	}
 
-	return version, name, nil
+	migrationSQL, err := fs.ReadFile(afs, fileName+".sql")
+	if err != nil {
+		return m, fmt.Errorf("failed to read migration file (%s): %w", fileName, err)
+	}
+	m.MigrationSQL = string(migrationSQL)
+
+	if fixtures {
+		// Check if the fixture file exists and read it if it does
+		if _, err := fs.Stat(afs, fileName+".fixture.sql"); err == nil {
+			fixturesSQL, err := fs.ReadFile(afs, fileName+".fixture.sql")
+			if err != nil {
+				return m, fmt.Errorf("failed to read fixture file (%s): %w", fileName, err)
+			}
+			m.FixturesSQL = string(fixturesSQL)
+		}
+	}
+
+	return m, nil
 }

@@ -1,0 +1,45 @@
+name: gomigrator
+
+networks:
+  gomigrator:
+    driver: bridge
+
+services:
+  # ===============================
+  # Migrator
+  # ===============================
+  gomigrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["gomigrator"]
+    profiles:
+      - migrator
+    environment:
+      POSTGRES_DRIVER_DSN: postgresql://gomigrator:gomigrator@postgres:5432/gomigrator?sslmode=disable
+      FIXTURES_ENABLED: true
+    networks:
+      - gomigrator
+    volumes:
+      - ./test/migrations:/migrations
+      - ./test/gomigrator.yaml:/gomigrator.yaml
+
+  # ===============================
+  # Databases
+  # ===============================
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    profiles:
+      - databases
+    environment:
+      POSTGRES_USER: gomigrator
+      POSTGRES_PASSWORD: gomigrator
+      POSTGRES_DB: gomigrator
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gomigrator -d gomigrator"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
+    networks:
+      - gomigrator

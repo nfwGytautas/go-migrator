@@ -1,0 +1,10 @@
+INSERT INTO three (id) VALUES (1);
+INSERT INTO three (id) VALUES (2);
+INSERT INTO three (id) VALUES (3);
+INSERT INTO three (id) VALUES (4);
+INSERT INTO three (id) VALUES (5);
+INSERT INTO three (id) VALUES (6);
+INSERT INTO three (id) VALUES (7);
+INSERT INTO three (id) VALUES (8);
+INSERT INTO three (id) VALUES (9);
+INSERT INTO three (id) VALUES (10);
